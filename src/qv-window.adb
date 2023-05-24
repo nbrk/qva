@@ -31,14 +31,16 @@ with Sf.Graphics.Rect;          use Sf.Graphics.Rect;
 
 package body Qv.Window is
 
-   Exit_Key            : Keycode_Type := Key_Escape;
-   Full_Screen         : Boolean      := False;
-   Last_Pre_Draw_Time  : Time;
-   Last_FPS_Estimate   : Integer;
-   Saved_Window_Title  : Unbounded_String;
-   Saved_Window_Width  : Positive;
-   Saved_Window_Height : Positive;
-   Saved_FPS_Limit     : Natural;
+   Exit_Key             : Keycode_Type := Key_Escape;
+   Full_Screen          : Boolean      := False;
+   Init_Window_Time     : Time;
+   Last_Begin_Draw_Time : Time;
+   Last_Frame_Duration  : Duration;
+   Last_FPS_Estimate    : Integer;
+   Saved_Window_Title   : Unbounded_String;
+   Saved_Window_Width   : Positive;
+   Saved_Window_Height  : Positive;
+   Saved_FPS_Limit      : Natural;
 
    -----------------
    -- Init_Window --
@@ -60,6 +62,7 @@ package body Qv.Window is
       --
       --  Remember parameters
       --
+      Init_Window_Time    := Clock;
       Saved_Window_Title  := To_Unbounded_String (Title);
       Saved_Window_Width  := Width;
       Saved_Window_Height := Height;
@@ -92,7 +95,7 @@ package body Qv.Window is
 
    procedure Close_Window is
    begin
-      RenderWindow.destroy (Current_Window);
+      destroy (Current_Window);
    end Close_Window;
 
    --------------------------
@@ -101,22 +104,8 @@ package body Qv.Window is
 
    function Is_Window_Fullscreen return Boolean is
    begin
-      pragma Compile_Time_Warning
-        (Standard.True, "Is_Window_Fullscreen unimplemented");
-      return
-        raise Program_Error with "Unimplemented function Is_Window_Fullscreen";
+      return Full_Screen;
    end Is_Window_Fullscreen;
-
-   ---------------------
-   -- Set_Window_Size --
-   ---------------------
-
-   procedure Set_Window_Size (Width, Height : Positive) is
-   begin
-      pragma Compile_Time_Warning
-        (Standard.True, "Set_Window_Size unimplemented");
-      raise Program_Error with "Unimplemented procedure Set_Window_Size";
-   end Set_Window_Size;
 
    -----------------------
    -- Toggle_Fullscreen --
@@ -150,7 +139,7 @@ package body Qv.Window is
 
    function Get_Screen_Width return Positive is
    begin
-      return Positive (RenderWindow.getSize (Current_Window).x);
+      return Positive (getSize (Current_Window).x);
    end Get_Screen_Width;
 
    -----------------------
@@ -159,7 +148,7 @@ package body Qv.Window is
 
    function Get_Screen_Height return Positive is
    begin
-      return Positive (RenderWindow.getSize (Current_Window).y);
+      return Positive (getSize (Current_Window).y);
    end Get_Screen_Height;
 
    ----------------------
@@ -177,7 +166,7 @@ package body Qv.Window is
 
    procedure Begin_Drawing is
    begin
-      Last_Pre_Draw_Time := Clock;
+      Last_Begin_Draw_Time := Clock;
    end Begin_Drawing;
 
    -----------------
@@ -186,12 +175,9 @@ package body Qv.Window is
 
    procedure End_Drawing is
    begin
-      RenderWindow.display (Current_Window);
-      declare
-         Dur : Duration := To_Duration (Clock - Last_Pre_Draw_Time);
-      begin
-         Last_FPS_Estimate := Natural (1.0 / Dur);
-      end;
+      display (Current_Window);
+      Last_Frame_Duration := To_Duration (Clock - Last_Begin_Draw_Time);
+      Last_FPS_Estimate   := Natural (1.0 / Last_Frame_Duration);
    end End_Drawing;
 
    --------------------
@@ -219,9 +205,7 @@ package body Qv.Window is
 
    function Get_Frame_Time return Float is
    begin
-      pragma Compile_Time_Warning
-        (Standard.True, "Get_Frame_Time unimplemented");
-      return raise Program_Error with "Unimplemented function Get_Frame_Time";
+      return Float (Last_Frame_Duration);
    end Get_Frame_Time;
 
    --------------
@@ -230,8 +214,7 @@ package body Qv.Window is
 
    function Get_Time return Long_Float is
    begin
-      pragma Compile_Time_Warning (Standard.True, "Get_Time unimplemented");
-      return raise Program_Error with "Unimplemented function Get_Time";
+      return Long_Float (To_Duration (Clock - Init_Window_Time));
    end Get_Time;
 
    ------------------------------
@@ -246,5 +229,23 @@ package body Qv.Window is
         raise Program_Error
           with "Unimplemented function Get_Monitor_Refresh_Rate";
    end Get_Monitor_Refresh_Rate;
+
+   -----------------
+   -- Show_Cursor --
+   -----------------
+
+   procedure Show_Cursor is
+   begin
+      setMouseCursorVisible (Current_Window, sfTrue);
+   end Show_Cursor;
+
+   -----------------
+   -- Hide_Cursor --
+   -----------------
+
+   procedure Hide_Cursor is
+   begin
+      setMouseCursorVisible (Current_Window, sfFalse);
+   end Hide_Cursor;
 
 end Qv.Window;

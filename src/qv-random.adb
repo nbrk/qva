@@ -1,5 +1,11 @@
 pragma Ada_2012;
+
+with Ada.Numerics.Float_Random;
 package body Qv.Random is
+
+   package Float_Random renames Ada.Numerics.Float_Random;
+
+   Float_RNG : Float_Random.Generator;
 
    ------------------------
    -- Get_Random_Integer --
@@ -7,21 +13,19 @@ package body Qv.Random is
 
    function Get_Random_Integer (Min, Max : Integer) return Integer is
    begin
-      pragma Compile_Time_Warning
-        (Standard.True, "Get_Random_Integer unimplemented");
       return
-        raise Program_Error with "Unimplemented function Get_Random_Integer";
+        Integer
+          (Float (Min) +
+           (Float_Random.Random (Float_RNG) * Float (Max - Min)));
    end Get_Random_Integer;
 
    ---------------------
    -- Set_Random_Seed --
    ---------------------
 
-   procedure Set_Random_Seed (N : Natural) is
+   procedure Set_Random_Seed (N : Integer) is
    begin
-      pragma Compile_Time_Warning
-        (Standard.True, "Set_Random_Seed unimplemented");
-      raise Program_Error with "Unimplemented procedure Set_Random_Seed";
+      Float_Random.Reset (Float_RNG, N);
    end Set_Random_Seed;
 
 end Qv.Random;

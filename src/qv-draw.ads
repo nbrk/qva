@@ -78,6 +78,14 @@ package Qv.Draw is
       Tint : Color_Type := White_Color);
    --  Draw a part of the texture defined by a source rectangle
 
+   procedure Draw_FPS (Pos_X, Pos_Y : Integer);
+   --  Draw current FPS using the default font (which must be set)
+
+   procedure Draw_Text
+     (Text : String; Pos_X, Pos_Y : Integer; Font_Size : Positive;
+      C    : Color_Type);
+   --  Draw text using the default font (which must be set)
+
 private
 
 end Qv.Draw;

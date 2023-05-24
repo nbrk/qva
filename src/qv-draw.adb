@@ -1,9 +1,11 @@
 pragma Ada_2012;
 
 with Qv.Color.SFML;              use Qv.Color.SFML;
+with Qv.Window;                  use Qv.Window;
 with Qv.Window.SFML;             use Qv.Window.SFML;
-with Qv.Draw.SFML;               use Qv.Draw.SFML;
 with Qv.Texture.SFML;            use Qv.Texture.SFML;
+with Qv.Font;                    use Qv.Font;
+with Qv.Font.SFML;               use Qv.Font.SFML;
 with Sf;                         use Sf;
 with Sf.Graphics;                use Sf.Graphics;
 with Sf.Graphics.Rect;           use Sf.Graphics.Rect;
@@ -15,10 +17,40 @@ with Sf.Graphics.CircleShape;    use Sf.Graphics.CircleShape;
 with Sf.Graphics.RectangleShape; use Sf.Graphics.RectangleShape;
 with Sf.Graphics.ConvexShape;    use Sf.Graphics.ConvexShape;
 with Sf.Graphics.Sprite;         use Sf.Graphics.Sprite;
+with Sf.Graphics.Text;           use Sf.Graphics.Text;
+with Sf.Graphics.Font;           use Sf.Graphics.Font;
 with Sf.System.Vector2;          use Sf.System.Vector2;
 
 package body Qv.Draw is
 
+   Reused_Line      : Sf.Graphics.sfVertexArray_Ptr;
+   Reused_Circle    : Sf.Graphics.sfCircleShape_Ptr;
+   Reused_Rectangle : Sf.Graphics.sfRectangleShape_Ptr;
+   Reused_Triangle  : Sf.Graphics.sfConvexShape_Ptr;
+   Reused_Sprite    : Sf.Graphics.sfSprite_Ptr;
+   Reused_Text      : Sf.Graphics.sfText_Ptr;
+
+   --------------------------------------------
+   -- Create_And_Initialize_Reused_SFML_Data --
+   --------------------------------------------
+
+   procedure Create_And_Initialize_Reused_SFML_Data is
+   begin
+      Reused_Line := create;
+      resize (Reused_Line, 2);
+      setPrimitiveType (Reused_Line, sfLines);
+
+      Reused_Circle := create;
+
+      Reused_Rectangle := create;
+
+      Reused_Triangle := create;
+      setPointCount (Reused_Triangle, 3);
+
+      Reused_Sprite := create;
+
+      Reused_Text := create;
+   end Create_And_Initialize_Reused_SFML_Data;
    ----------------
    -- Draw_Pixel --
    ----------------
@@ -39,8 +71,8 @@ package body Qv.Draw is
       V0 : access Sf.Graphics.Vertex.sfVertex;
       V1 : access Sf.Graphics.Vertex.sfVertex;
    begin
-      V0 := getVertex (Current_Line, 0);
-      V1 := getVertex (Current_Line, 1);
+      V0 := getVertex (Reused_Line, 0);
+      V1 := getVertex (Reused_Line, 1);
 
       V0.position.x := Float (Start_X);
       V0.position.y := Float (Start_Y);
@@ -48,7 +80,7 @@ package body Qv.Draw is
       V1.position.y := Float (End_Y);
       V0.color      := To_Sf_Color (C);
       V1.color      := To_Sf_Color (C);
-      drawVertexArray (Current_Window, Current_Line);
+      drawVertexArray (Current_Window, Reused_Line);
    end Draw_Line;
 
    ---------------
@@ -58,8 +90,8 @@ package body Qv.Draw is
    procedure Draw_Line (Start_Pos, End_Pos : Vector_2_Type; C : Color_Type) is
    begin
       Draw_Line
-        (Integer (Start_Pos.X), Integer (Start_Pos.Y), Integer (End_Pos.X),
-         Integer (End_Pos.Y), C);
+        (Integer (Start_Pos (1)), Integer (Start_Pos (2)),
+         Integer (End_Pos (1)), Integer (End_Pos (2)), C);
    end Draw_Line;
 
    ---------------------
@@ -100,12 +132,12 @@ package body Qv.Draw is
      (Center_Pos : Vector_2_Type; Radius : Float; C : Color_Type)
    is
    begin
-      setRadius (Current_Circle, Radius);
-      setPosition (Current_Circle, sfVector2f'(Center_Pos.X, Center_Pos.Y));
-      setOutlineThickness (Current_Circle, -1.0);
-      setOutlineColor (Current_Circle, To_Sf_Color (C));
-      setFillColor (Current_Circle, To_Sf_Color (C));
-      drawCircleShape (Current_Window, Current_Circle);
+      setRadius (Reused_Circle, Radius);
+      setPosition (Reused_Circle, sfVector2f'(Center_Pos (1), Center_Pos (2)));
+      setOutlineThickness (Reused_Circle, -1.0);
+      setOutlineColor (Reused_Circle, To_Sf_Color (C));
+      setFillColor (Reused_Circle, To_Sf_Color (C));
+      drawCircleShape (Current_Window, Reused_Circle);
    end Draw_Circle;
 
    -----------------------
@@ -128,12 +160,12 @@ package body Qv.Draw is
      (Center_Pos : Vector_2_Type; Radius : Float; C : Color_Type)
    is
    begin
-      setRadius (Current_Circle, Radius);
-      setPosition (Current_Circle, sfVector2f'(Center_Pos.X, Center_Pos.Y));
-      setOutlineThickness (Current_Circle, -1.0);
-      setOutlineColor (Current_Circle, To_Sf_Color (C));
-      setFillColor (Current_Circle, To_Sf_Color ((255, 255, 255, 0)));
-      drawCircleShape (Current_Window, Current_Circle);
+      setRadius (Reused_Circle, Radius);
+      setPosition (Reused_Circle, sfVector2f'(Center_Pos (1), Center_Pos (2)));
+      setOutlineThickness (Reused_Circle, -1.0);
+      setOutlineColor (Reused_Circle, To_Sf_Color (C));
+      setFillColor (Reused_Circle, To_Sf_Color ((255, 255, 255, 0)));
+      drawCircleShape (Current_Window, Reused_Circle);
    end Draw_Circle_Lines;
 
    --------------------
@@ -154,12 +186,12 @@ package body Qv.Draw is
      (Pos : Vector_2_Type; Size : Vector_2_Type; C : Color_Type)
    is
    begin
-      setPosition (Current_Rectangle, sfVector2f'(Pos.X, Pos.Y));
-      setSize (Current_Rectangle, sfVector2f'(Size.X, Size.Y));
-      setOutlineThickness (Current_Rectangle, -1.0);
-      setOutlineColor (Current_Rectangle, To_Sf_Color (C));
-      setFillColor (Current_Rectangle, To_Sf_Color (C));
-      drawRectangleShape (Current_Window, Current_Rectangle);
+      setPosition (Reused_Rectangle, sfVector2f'(Pos (1), Pos (2)));
+      setSize (Reused_Rectangle, sfVector2f'(Size (1), Size (2)));
+      setOutlineThickness (Reused_Rectangle, -1.0);
+      setOutlineColor (Reused_Rectangle, To_Sf_Color (C));
+      setFillColor (Reused_Rectangle, To_Sf_Color (C));
+      drawRectangleShape (Current_Window, Reused_Rectangle);
    end Draw_Rectangle;
 
    --------------------------
@@ -182,12 +214,12 @@ package body Qv.Draw is
      (Pos : Vector_2_Type; Size : Vector_2_Type; C : Color_Type)
    is
    begin
-      setPosition (Current_Rectangle, sfVector2f'(Pos.X, Pos.Y));
-      setSize (Current_Rectangle, sfVector2f'(Size.X, Size.Y));
-      setOutlineThickness (Current_Rectangle, 1.0);
-      setOutlineColor (Current_Rectangle, To_Sf_Color (C));
-      setFillColor (Current_Rectangle, To_Sf_Color ((255, 255, 255, 0)));
-      drawRectangleShape (Current_Window, Current_Rectangle);
+      setPosition (Reused_Rectangle, sfVector2f'(Pos (1), Pos (2)));
+      setSize (Reused_Rectangle, sfVector2f'(Size (1), Size (2)));
+      setOutlineThickness (Reused_Rectangle, 1.0);
+      setOutlineColor (Reused_Rectangle, To_Sf_Color (C));
+      setFillColor (Reused_Rectangle, To_Sf_Color ((255, 255, 255, 0)));
+      drawRectangleShape (Current_Window, Reused_Rectangle);
    end Draw_Rectangle_Lines;
 
    -------------------
@@ -210,13 +242,13 @@ package body Qv.Draw is
      (Pos_1, Pos_2, Pos_3 : Vector_2_Type; C : Color_Type)
    is
    begin
-      setPoint (Current_Triangle, 0, sfVector2f'(Pos_1.X, Pos_1.Y));
-      setPoint (Current_Triangle, 1, sfVector2f'(Pos_2.X, Pos_2.Y));
-      setPoint (Current_Triangle, 2, sfVector2f'(Pos_3.X, Pos_3.Y));
-      setOutlineThickness (Current_Triangle, 1.0);
-      setOutlineColor (Current_Triangle, To_Sf_Color (C));
-      setFillColor (Current_Triangle, To_Sf_Color (C));
-      drawConvexShape (Current_Window, Current_Triangle);
+      setPoint (Reused_Triangle, 0, sfVector2f'(Pos_1 (1), Pos_1 (2)));
+      setPoint (Reused_Triangle, 1, sfVector2f'(Pos_2 (1), Pos_2 (2)));
+      setPoint (Reused_Triangle, 2, sfVector2f'(Pos_3 (1), Pos_3 (2)));
+      setOutlineThickness (Reused_Triangle, 1.0);
+      setOutlineColor (Reused_Triangle, To_Sf_Color (C));
+      setFillColor (Reused_Triangle, To_Sf_Color (C));
+      drawConvexShape (Current_Window, Reused_Triangle);
    end Draw_Triangle;
 
    -------------------------
@@ -240,13 +272,13 @@ package body Qv.Draw is
      (Pos_1, Pos_2, Pos_3 : Vector_2_Type; C : Color_Type)
    is
    begin
-      setPoint (Current_Triangle, 0, sfVector2f'(Pos_1.X, Pos_1.Y));
-      setPoint (Current_Triangle, 1, sfVector2f'(Pos_2.X, Pos_2.Y));
-      setPoint (Current_Triangle, 2, sfVector2f'(Pos_3.X, Pos_3.Y));
-      setOutlineThickness (Current_Triangle, 1.0);
-      setOutlineColor (Current_Triangle, To_Sf_Color (C));
-      setFillColor (Current_Triangle, To_Sf_Color ((255, 255, 255, 0)));
-      drawConvexShape (Current_Window, Current_Triangle);
+      setPoint (Reused_Triangle, 0, sfVector2f'(Pos_1 (1), Pos_1 (2)));
+      setPoint (Reused_Triangle, 1, sfVector2f'(Pos_2 (1), Pos_2 (2)));
+      setPoint (Reused_Triangle, 2, sfVector2f'(Pos_3 (1), Pos_3 (2)));
+      setOutlineThickness (Reused_Triangle, 1.0);
+      setOutlineColor (Reused_Triangle, To_Sf_Color (C));
+      setFillColor (Reused_Triangle, To_Sf_Color ((255, 255, 255, 0)));
+      drawConvexShape (Current_Window, Reused_Triangle);
    end Draw_Triangle_Lines;
 
    ------------------
@@ -258,10 +290,10 @@ package body Qv.Draw is
       Tint : Color_Type := White_Color)
    is
    begin
-      setPosition (Current_Sprite, sfVector2f'(Float (Pos_X), Float (Pos_Y)));
-      setTexture (Current_Sprite, To_Sf_Texture_Ptr (Tex), sfTrue);
-      setColor (Current_Sprite, To_Sf_Color (Tint));
-      drawSprite (Current_Window, Current_Sprite);
+      setPosition (Reused_Sprite, sfVector2f'(Float (Pos_X), Float (Pos_Y)));
+      setTexture (Reused_Sprite, To_Sf_Texture_Ptr (Tex), sfTrue);
+      setColor (Reused_Sprite, To_Sf_Color (Tint));
+      drawSprite (Current_Window, Reused_Sprite);
    end Draw_Texture;
 
    -----------------------
@@ -274,34 +306,41 @@ package body Qv.Draw is
       Tint : Color_Type := White_Color)
    is
    begin
-      setPosition (Current_Sprite, sfVector2f'(Float (Pos_X), Float (Pos_Y)));
-      setTexture (Current_Sprite, To_Sf_Texture_Ptr (Tex), sfTrue);
+      setPosition (Reused_Sprite, sfVector2f'(Float (Pos_X), Float (Pos_Y)));
+      setTexture (Reused_Sprite, To_Sf_Texture_Ptr (Tex), sfTrue);
       setTextureRect
-        (Current_Sprite, sfIntRect'(Src_X, Src_Y, Src_Width, Src_Height));
-      setColor (Current_Sprite, To_Sf_Color (Tint));
-      drawSprite (Current_Window, Current_Sprite);
+        (Reused_Sprite, sfIntRect'(Src_X, Src_Y, Src_Width, Src_Height));
+      setColor (Reused_Sprite, To_Sf_Color (Tint));
+      drawSprite (Current_Window, Reused_Sprite);
    end Draw_Texture_Part;
 
-   -----------------------------------------------
-   -- Create_And_Initialize_Reused_Shapes --
-   -----------------------------------------------
+   --------------
+   -- Draw_FPS --
+   --------------
 
-   procedure Create_And_Initialize_Reused_Shapes is
+   procedure Draw_FPS (Pos_X, Pos_Y : Integer) is
+      Str : constant String := Get_FPS'Image & " FPS";
    begin
-      Current_Line := create;
-      resize (Current_Line, 2);
-      setPrimitiveType (Current_Line, sfLines);
+      Draw_Text (Str, Pos_X, Pos_Y, 14, Yellow_Color);
+   end Draw_FPS;
 
-      Current_Circle := create;
+   ---------------
+   -- Draw_Text --
+   ---------------
 
-      Current_Rectangle := create;
-
-      Current_Triangle := create;
-      setPointCount (Current_Triangle, 3);
-
-      Current_Sprite := create;
-   end Create_And_Initialize_Reused_Shapes;
+   procedure Draw_Text
+     (Text : String; Pos_X, Pos_Y : Integer; Font_Size : Positive;
+      C    : Color_Type)
+   is
+   begin
+      setFont (Reused_Text, To_Sf_Font_Ptr (Get_Default_Font));
+      setPosition (Reused_Text, sfVector2f'(Float (Pos_X), Float (Pos_Y)));
+      setString (Reused_Text, Text);
+      setCharacterSize (Reused_Text, sfUint32 (Font_Size));
+      setFillColor (Reused_Text, To_Sf_Color (C));
+      drawText (Current_Window, Reused_Text);
+   end Draw_Text;
 
 begin
-   Create_And_Initialize_Reused_Shapes;
+   Create_And_Initialize_Reused_SFML_Data;
 end Qv.Draw;

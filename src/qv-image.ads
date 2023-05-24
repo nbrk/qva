@@ -1,6 +1,6 @@
 package Qv.Image is
 
-   --  TODO
+   --  TODO: CPU memory images
 
    type Image_Type is private;
 

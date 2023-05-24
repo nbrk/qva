@@ -22,9 +22,6 @@ package Qv.Window is
    function Is_Window_Fullscreen return Boolean;
    --  Checks whether the window is currently in fullscreen mode
 
-   procedure Set_Window_Size (Width, Height : Positive);
-   --  Set window dimensions
-
    procedure Toggle_Fullscreen;
    --  Toggle window fullscreen mode
 
@@ -41,7 +38,7 @@ package Qv.Window is
    --  Begin frame drawing
 
    procedure End_Drawing;
-   --  End frame drawing and swap buffers
+   --  End frame drawing, perform buffers swapping
 
    procedure Set_Target_FPS (N : Natural);
    --  Set desired frames per second limit (0 to disable the limit, which is default)
@@ -57,6 +54,12 @@ package Qv.Window is
 
    function Get_Monitor_Refresh_Rate return Positive;
    --  Get current monitor refresh rate
+
+   procedure Show_Cursor;
+   --  Show mouse cursor
+
+   procedure Hide_Cursor;
+   --  Hide mouse cursor
 
 private
 
