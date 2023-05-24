@@ -1,0 +1,13 @@
+name = "demo_1"
+description = "Shiny new project"
+version = "0.1.0-dev"
+
+authors = ["Nikolay Burkov"]
+maintainers = ["Nikolay Burkov <nbrk@linklevel.net>"]
+maintainers-logins = ["nbrk"]
+
+executables = ["demo_1"]
+[[depends-on]]
+qva = "~0.1.0-dev"
+[[pins]]
+qva = { path='../..' }
